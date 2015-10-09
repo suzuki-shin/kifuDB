@@ -21,23 +21,23 @@ someFunc :: IO ()
 someFunc = S.scotty 3000 $ do
   S.middleware L.logStdoutDev
 
-  S.get "/person/:id" $ do
-    personId <- S.param "id"
-    person <- getPerson ((toSqlKey personId)::PersonId)
-    S.json person
+  S.get "/fugou/:id" $ do
+    fugouId <- S.param "id"
+    fugou <- getFugou ((toSqlKey fugouId)::FugouId)
+    S.json fugou
 
-  S.post "/person" $ do
-    p <- S.jsonData :: S.ActionM Person
-    personId <- liftIO $ insertPerson p
-    person <- getPerson personId
-    S.json person
+  S.post "/fugou" $ do
+    f <- S.jsonData :: S.ActionM Fugou
+    fugouId <- insertFugou f
+    fugou <- getFugou fugouId
+    S.json fugou
 
-  S.get "/persons" $ do
-    persons <- liftIO selectPersons
-    S.json $ map entityVal persons
+  S.get "/fugous" $ do
+    fugous <- selectFugous
+    S.json $ map entityVal fugous
 
   S.notFound $
     S.text "there is no such route."
 
 
--- curl -v -H "Accept: application/json" -H "Content-type: application/json" -XPOST -d "{\"personName\" : \"hoge\", \"personAge\" : 10}" localhost:3000/person
+-- curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"fugouPlayer":1, "fugouTo":76, "fugouFrom":77, "fugouKoma":"Fu", "fugouNari":false}'  http://localhost:3000/fugou

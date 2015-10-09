@@ -22,6 +22,7 @@ library
                      , bytestring
                      , http-types
                      , monad-logger
+                     , monad-control
                      , persistent
                      , persistent-sqlite
                      , persistent-template
