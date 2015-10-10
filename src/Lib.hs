@@ -36,8 +36,17 @@ someFunc = S.scotty 3000 $ do
     fugous <- selectFugous
     S.json $ map entityVal fugous
 
+  S.get "/kifu/:id" $ do
+    kifuId <- S.param "id"
+    kifu <- getKifu ((toSqlKey kifuId)::KifuId)
+    S.json kifu
+
+  S.get "/test" $ do
+    testAPI
+    S.redirect "/fugous"
+
   S.notFound $
     S.text "there is no such route."
 
 
--- curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"fugouPlayer":1, "fugouTo":76, "fugouFrom":77, "fugouKoma":"Fu", "fugouNari":false}'  http://localhost:3000/fugou
+-- curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"fugouNari":false,"fugouPlayer":"P1","fugouFrom":{"x":7,"y":7},"fugouKifuId":1,"fugouTo":{"x":7,"y":6},"fugouKoma":"Fu"}'  http://localhost:3000/fugou

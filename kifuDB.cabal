@@ -21,6 +21,7 @@ library
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , bytestring
+                     , containers
                      , http-types
                      , monad-logger
                      , monad-control
