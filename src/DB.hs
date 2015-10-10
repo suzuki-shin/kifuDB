@@ -16,20 +16,19 @@ module DB
     , Kifu(..)
     , KifuId
     , selectFugous
-    , insertFugou
-    , getFugou
-    , getKifu
-    , insertKifu
-    , toSqlKey
-    , entityVal
+    , get
+    , insert
+    , P.toSqlKey
+    , P.entityVal
     , testAPI
     ) where
 
-import           Control.Monad.Trans.Control (MonadBaseControl)
 import           Control.Monad.IO.Class (MonadIO, liftIO)
--- import           Data.Tree as Tree
-import           Database.Persist
-import           Database.Persist.Sqlite
+import           Control.Monad.Logger (NoLoggingT)
+import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Control.Monad.Trans.Resource.Internal (ResourceT)
+import qualified Database.Persist as P
+import qualified Database.Persist.Sqlite as P
 import           Database.Persist.TH
 import qualified Data.Aeson as A
 import qualified Data.Map.Strict as M
@@ -62,13 +61,6 @@ Fugou
   deriving Show Generic
 |]
 
-
--- data FugouTree = FugouTree { getFugouTree :: Tree Fugou } deriving (Show, Read, Generic)
--- derivePersistField "FugouTree"
-
--- instance A.FromJSON FugouTree
--- instance A.ToJSON FugouTree
-
 instance A.FromJSON Fugou
 instance A.ToJSON Fugou
 
@@ -78,46 +70,35 @@ instance A.ToJSON Kifu
 instance A.FromJSON Kyokumen
 instance A.ToJSON Kyokumen
 
-insertFugou :: (MonadBaseControl IO m, MonadIO m) => Fugou -> m (Key Fugou)
-insertFugou f = runSqlite dbname $ do
-  runMigration migrateAll
-  insert f
+runDB :: MonadIO m => P.SqlPersistT (Control.Monad.Logger.NoLoggingT (Control.Monad.Trans.Resource.Internal.ResourceT IO)) a -> m a
+runDB query = liftIO $ P.runSqlite "db.sqlite" query
 
-selectFugous :: (MonadBaseControl IO m, MonadIO m) => m [Entity Fugou]
-selectFugous = runSqlite dbname $ do
-  runMigration migrateAll
-  selectList ([] :: [Filter Fugou]) []
+-- selectFugous = runDB $ selectList ([] :: [Filter Fugou]) []
+selectFugous :: (MonadBaseControl IO m, MonadIO m) => m [P.Entity Fugou]
+selectFugous = P.runSqlite dbname $ do
+  P.selectList ([] :: [P.Filter Fugou]) []
 
-getFugou :: (MonadBaseControl IO m, MonadIO m) => FugouId -> m (Maybe Fugou)
-getFugou fugouId = runSqlite dbname $ do
-  runMigration migrateAll
-  get fugouId
+get :: (P.PersistEntity val, MonadIO m, P.PersistEntityBackend val ~ P.SqlBackend) => P.Key val -> m (Maybe val)
+get = runDB . P.get
 
-insertKifu :: (MonadBaseControl IO m, MonadIO m) => Kifu -> m (Key Kifu)
-insertKifu k = runSqlite dbname $ do
-  runMigration migrateAll
-  insert k
+insert :: (P.PersistEntity val, MonadIO m, P.PersistEntityBackend val ~ P.SqlBackend) => val -> m (P.Key val)
+insert = runDB . P.insert
 
-getKifu :: (MonadBaseControl IO m, MonadIO m) => KifuId -> m (Maybe Kifu)
-getKifu kifuId = runSqlite dbname $ do
-  runMigration migrateAll
-  get kifuId
-
-testAPI :: (MonadBaseControl IO m, MonadIO m) => m (Key Fugou)
-testAPI = runSqlite dbname $ do
-  runMigration migrateAll
+testAPI :: (MonadBaseControl IO m, MonadIO m) => m (P.Key Fugou)
+testAPI = P.runSqlite dbname $ do
+  P.runMigration DB.migrateAll
   liftIO $ print "getKifu"
-  kifu <- getKifu ((toSqlKey 1)::KifuId)
+  kifu <- get ((P.toSqlKey 1)::KifuId)
   case kifu of
     Nothing -> do
-      insertKifu $ Kifu Nothing [kyokumen1]
+      insert $ Kifu Nothing [kyokumen1]
       liftIO $ print "insert kifu"
     otherwise -> liftIO $ print kifu
   liftIO $ print "insertKifu"
-  insertFugou fu84
+  insert fu84
 
   where
     fu76 = Fugou P1 (Pos 7 6) (Just (Pos 7 7)) Fu False
     fu84 = Fugou P2 (Pos 8 4) (Just (Pos 8 3)) Fu False
     kyokumen1 :: Kyokumen
-    kyokumen1 = Kyokumen ((toSqlKey 1)::KifuId) (Ban (M.empty)) fu76 [] []
+    kyokumen1 = Kyokumen ((P.toSqlKey 1)::KifuId) (Ban (M.empty)) fu76 [] []

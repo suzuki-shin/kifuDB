@@ -15,7 +15,7 @@ import Control.Monad.IO.Class  (liftIO)
 import qualified Network.Wai.Middleware.RequestLogger as L
 import qualified Web.Scotty as S
 
-import DB
+import qualified DB
 
 someFunc :: IO ()
 someFunc = S.scotty 3000 $ do
@@ -23,26 +23,26 @@ someFunc = S.scotty 3000 $ do
 
   S.get "/fugou/:id" $ do
     fugouId <- S.param "id"
-    fugou <- getFugou ((toSqlKey fugouId)::FugouId)
+    fugou <- DB.get ((DB.toSqlKey fugouId) :: DB.FugouId)
     S.json fugou
 
   S.post "/fugou" $ do
-    f <- S.jsonData :: S.ActionM Fugou
-    fugouId <- insertFugou f
-    fugou <- getFugou fugouId
+    f <- S.jsonData :: S.ActionM DB.Fugou
+    fugouId <- DB.insert f
+    fugou <- DB.get fugouId
     S.json fugou
 
   S.get "/fugous" $ do
-    fugous <- selectFugous
-    S.json $ map entityVal fugous
+    fugous <- DB.selectFugous
+    S.json $ map DB.entityVal fugous
 
   S.get "/kifu/:id" $ do
     kifuId <- S.param "id"
-    kifu <- getKifu ((toSqlKey kifuId)::KifuId)
+    kifu <- DB.get ((DB.toSqlKey kifuId) :: DB.KifuId)
     S.json kifu
 
   S.get "/test" $ do
-    testAPI
+    DB.testAPI
     S.redirect "/fugous"
 
   S.notFound $
