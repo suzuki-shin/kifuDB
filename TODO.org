@@ -1,0 +1,4 @@
+- [ ] APIかんがえる
+ - [ ] post /fugou/:kifuId
+ - [ ] get /kifu/:id/:orderId
+
