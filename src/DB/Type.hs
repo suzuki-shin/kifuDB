@@ -14,8 +14,6 @@ import Database.Persist
 import Database.Persist.Sqlite
 import Database.Persist.TH
 import qualified Data.Map.Strict as M
--- import           Data.Tree (Tree)
--- import           Data.Tree as Tree
 import GHC.Generics
 
 data Player = P1 | P2 deriving (Show, Read, Eq, Generic)
@@ -50,16 +48,11 @@ instance A.ToJSON Result
 
 data Masu = Masu { masuKoma :: Koma, masuPlayer :: Player } deriving (Show, Read, Eq, Generic)
 data Ban = Ban { ban :: M.Map String Masu } deriving (Show, Read, Eq, Generic) -- Mapのキーは PosからStringに変換する（じゃないとToJSON,FromJSONのインスタンスじゃないから） 
--- data Ban = Ban { getBan :: M.Map Pos (Koma, Player) } deriving (Show, Read, Eq, Generic)
--- type Ban = M.Map Pos (Koma, Player)
 
 derivePersistField "Ban"
 
 instance A.FromJSON Masu
 instance A.ToJSON Masu
-
--- instance A.FromJSON (M.Map Pos Masu)
--- instance A.ToJSON (M.Map Pos Masu)
 
 instance A.FromJSON Ban
 instance A.ToJSON Ban

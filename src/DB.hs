@@ -73,9 +73,10 @@ instance A.FromJSON Kyokumen
 instance A.ToJSON Kyokumen
 
 runDB :: MonadIO m => P.SqlPersistT (Control.Monad.Logger.NoLoggingT (Control.Monad.Trans.Resource.Internal.ResourceT IO)) a -> m a
-runDB query = liftIO $ P.runSqlite "db.sqlite" query
+runDB query = liftIO $ P.runSqlite "db.sqlite" $ do
+  P.runMigration migrateAll
+  query
 
--- selectFugous = runDB $ selectList ([] :: [Filter Fugou]) []
 selectFugous :: (MonadBaseControl IO m, MonadIO m) => m [P.Entity Fugou]
 selectFugous = P.runSqlite dbname $ do
   P.selectList ([] :: [P.Filter Fugou]) []
@@ -88,7 +89,6 @@ insert = runDB . P.insert
 
 testAPI :: (MonadBaseControl IO m, MonadIO m) => m (P.Key Fugou)
 testAPI = P.runSqlite dbname $ do
-  P.runMigration DB.migrateAll
   liftIO $ print "getKifu"
   kifu <- get ((P.toSqlKey 1)::KifuId)
   case kifu of
