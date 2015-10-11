@@ -47,10 +47,12 @@ Kifu
   deriving Show Generic
 Kyokumen
   kifuId KifuId
+  orderId Int
   ban Ban
   fugou Fugou
   mochiGoma1 [Koma]
   mochiGoma2 [Koma]
+  KyokumenOrder kifuId orderId
   deriving Show Generic
 Fugou
   player Player
@@ -101,4 +103,4 @@ testAPI = P.runSqlite dbname $ do
     fu76 = Fugou P1 (Pos 7 6) (Just (Pos 7 7)) Fu False
     fu84 = Fugou P2 (Pos 8 4) (Just (Pos 8 3)) Fu False
     kyokumen1 :: Kyokumen
-    kyokumen1 = Kyokumen ((P.toSqlKey 1)::KifuId) (Ban (M.empty)) fu76 [] []
+    kyokumen1 = Kyokumen ((P.toSqlKey 1)::KifuId) 1 (Ban (M.empty)) fu76 [] []
