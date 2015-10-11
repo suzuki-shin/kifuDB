@@ -43,7 +43,7 @@ dbname = "db.sqlite"
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Kifu
   result Result Maybe
-  kifu [Kyokumen]
+  info Text
   deriving Show Generic
 Kyokumen
   kifuId KifuId
@@ -93,7 +93,7 @@ testAPI = P.runSqlite dbname $ do
   kifu <- get ((P.toSqlKey 1)::KifuId)
   case kifu of
     Nothing -> do
-      insert $ Kifu Nothing [kyokumen1]
+      insert $ Kifu Nothing ""
       liftIO $ print "insert kifu"
     otherwise -> liftIO $ print kifu
   liftIO $ print "insertKifu"
