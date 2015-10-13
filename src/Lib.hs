@@ -1,7 +1,5 @@
-{-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE TypeFamilies               #-}
@@ -23,27 +21,23 @@ someFunc = S.scotty 3000 $ do
 
   S.get "/fugou/:id" $ do
     fugouId <- S.param "id"
-    fugou <- DB.get ((DB.toSqlKey fugouId) :: DB.FugouId)
+    fugou <- DB.get (DB.toSqlKey fugouId :: DB.FugouId)
     S.json fugou
 
   S.post "/fugou" $ do
     f <- S.jsonData :: S.ActionM DB.Fugou
-    fugouId <- DB.insert f
-    fugou <- DB.get fugouId
+    fugou <- DB.insertFugou f
     S.json fugou
-
-  S.get "/fugous" $ do
-    fugous <- DB.selectFugous
-    S.json $ map DB.entityVal fugous
 
   S.get "/kifu/:id" $ do
     kifuId <- S.param "id"
-    kifu <- DB.get ((DB.toSqlKey kifuId) :: DB.KifuId)
+    kifu <- DB.get (DB.toSqlKey kifuId :: DB.KifuId)
     S.json kifu
 
-  S.get "/test" $ do
-    DB.testAPI
-    S.redirect "/fugous"
+  S.post "/game/start" $ do
+    k <- S.jsonData :: S.ActionM DB.Kifu
+    x <- DB.insertKifu k
+    liftIO $ print x
 
   S.notFound $
     S.text "there is no such route."

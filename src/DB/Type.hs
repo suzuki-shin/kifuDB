@@ -4,6 +4,7 @@
 module DB.Type
     ( Player(..)
     , Koma(..)
+    , Masu(..)
     , Pos(..)
     , Result(..)
     , Ban(..)
@@ -47,7 +48,7 @@ instance A.ToJSON Result
 
 
 data Masu = Masu { masuKoma :: Koma, masuPlayer :: Player } deriving (Show, Read, Eq, Generic)
-data Ban = Ban { ban :: M.Map String Masu } deriving (Show, Read, Eq, Generic) -- Mapのキーは PosからStringに変換する（じゃないとToJSON,FromJSONのインスタンスじゃないから） 
+data Ban = Ban { ban :: M.Map String (Maybe Masu) } deriving (Show, Read, Eq, Generic) -- Mapのキーは PosからStringに変換する（じゃないとToJSON,FromJSONのインスタンスじゃないから） 
 
 derivePersistField "Ban"
 
