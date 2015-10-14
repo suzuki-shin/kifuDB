@@ -21,7 +21,7 @@ someFunc = S.scotty 3000 $ do
 
   S.get "/fugou/:id" $ do
     fugouId <- S.param "id"
-    fugou <- DB.get (DB.toSqlKey fugouId :: DB.FugouId)
+    fugou <- DB.getFugou fugouId
     S.json fugou
 
   S.post "/fugou" $ do
@@ -31,7 +31,8 @@ someFunc = S.scotty 3000 $ do
 
   S.get "/kifu/:id" $ do
     kifuId <- S.param "id"
-    kifu <- DB.get (DB.toSqlKey kifuId :: DB.KifuId)
+    kifu <- DB.getKifu kifuId
+--     kifu <- DB.runDB $ P.get (DB.toSqlKey kifuId :: DB.KifuId)
     S.json kifu
 
   S.post "/game/start" $ do

@@ -16,7 +16,8 @@ module DB
     , Kifu(..)
     , KifuId
     , selectFugous
-    , get
+    , getFugou
+    , getKifu
     , insertKifu
     , insertFugou
     , P.toSqlKey
@@ -86,10 +87,10 @@ insertFugou f = runDB $ do
   let
     kifuId = fugouKifuId f
     orderId = fugouOrderId f
-  kyokumen <- P.entityVal . fromJust <$> lastKyokumen kifuId orderId
-  fugouId <- insert f
-  fugou <- get fugouId
-  insert $ Kyokumen kifuId orderId (nextBan (kyokumenBan kyokumen) f) [] []
+  kyokumen <- P.entityVal . fromJust <$> lastKyokumen kifuId orderId -- TODO: fromJustをちゃんとハンドリングする
+  fugouId <- P.insert f
+  fugou <- P.get fugouId
+  P.insert $ Kyokumen kifuId orderId (nextBan (kyokumenBan kyokumen) f) [] []
   return fugou
   where
     lastKyokumen kid oid = P.getBy $ KyokumenOrder kid (oid - 1)
@@ -100,9 +101,16 @@ insert Kifu and insert initial Kyokumen.
 -}
 insertKifu :: MonadIO m => Kifu -> m KifuId
 insertKifu k = runDB $ do
-  kifuId <- insert k
-  insert $ initKyokumen kifuId
+  kifuId <- P.insert k
+  P.insert $ initKyokumen kifuId
   return kifuId
+
+
+
+getFugou fid = runDB $ P.get (P.toSqlKey fid :: FugouId)
+
+getKifu kid = runDB $ P.get (P.toSqlKey kid :: KifuId)
+
 
 
 -- runDB :: MonadIO m => P.SqlPersistT (Control.Monad.Logger.NoLoggingT (Control.Monad.Trans.Resource.Internal.ResourceT IO)) a -> m a
@@ -161,10 +169,10 @@ selectFugous :: (MonadBaseControl IO m, MonadIO m) => m [P.Entity Fugou]
 selectFugous = P.runSqlite dbname $
   P.selectList ([] :: [P.Filter Fugou]) []
 
-get :: (P.PersistEntity val, MonadIO m, P.PersistEntityBackend val ~ P.SqlBackend)
-     => P.Key val -> m (Maybe val)
-get = runDB . P.get
+-- get :: (P.PersistEntity val, MonadIO m, P.PersistEntityBackend val ~ P.SqlBackend)
+--      => P.Key val -> m (Maybe val)
+-- get = runDB . P.get
 
-insert :: (P.PersistEntity val, MonadIO m, P.PersistEntityBackend val ~ P.SqlBackend)
-        => val -> m (P.Key val)
-insert = runDB . P.insert
+-- insert :: (P.PersistEntity val, MonadIO m, P.PersistEntityBackend val ~ P.SqlBackend)
+--         => val -> m (P.Key val)
+-- insert = runDB . P.insert
