@@ -1,5 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 module DB.Type
     ( Player(..)
@@ -8,14 +8,16 @@ module DB.Type
     , Pos(..)
     , Result(..)
     , Ban(..)
+    , Fugou(..)
       ) where
 
-import qualified Data.Aeson as A
-import Database.Persist
-import Database.Persist.Sqlite
-import Database.Persist.TH
-import qualified Data.Map.Strict as M
-import GHC.Generics
+import qualified Data.Aeson              as A
+import           Data.Int                (Int64)
+import qualified Data.Map.Strict         as M
+import           Database.Persist
+import           Database.Persist.Sqlite
+import           Database.Persist.TH
+import           GHC.Generics
 
 data Player = P1 | P2 deriving (Show, Read, Eq, Generic)
 derivePersistField "Player"
@@ -48,7 +50,7 @@ instance A.ToJSON Result
 
 
 data Masu = Masu { masuKoma :: Koma, masuPlayer :: Player } deriving (Show, Read, Eq, Generic)
-data Ban = Ban { ban :: M.Map String (Maybe Masu) } deriving (Show, Read, Eq, Generic) -- Mapのキーは PosからStringに変換する（じゃないとToJSON,FromJSONのインスタンスじゃないから） 
+data Ban = Ban { ban :: M.Map String (Maybe Masu) } deriving (Show, Read, Eq, Generic) -- Mapのキーは PosからStringに変換する（じゃないとToJSON,FromJSONのインスタンスじゃないから）
 
 derivePersistField "Ban"
 
@@ -58,3 +60,18 @@ instance A.ToJSON Masu
 instance A.FromJSON Ban
 instance A.ToJSON Ban
 
+data Fugou = Fugou
+ { fugouKifuId   :: Int64
+ , fugouOrderId  :: Int
+ , fugouPlayer   :: Player
+ , fugouTo       :: Pos
+ , fugouFrom     :: Maybe Pos
+ , fugouKoma     :: Koma
+ , fugouNari     :: Bool
+ , preKyokumenId :: Int64
+} deriving (Show, Read, Eq, Generic)
+
+instance A.FromJSON Fugou
+instance A.ToJSON Fugou
+
+derivePersistField "Fugou"

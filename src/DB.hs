@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE GADTs                      #-}
@@ -8,39 +8,37 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE TypeSynonymInstances       #-}
 
 module DB
     ( Fugou(..)
-    , FugouId
     , Kifu(..)
     , KifuId
-    , selectFugous
-    , getFugou
     , getKifu
     , insertKifu
-    , insertFugou
+    , insertKyokumen
     , P.toSqlKey
     , P.entityVal
     ) where
 
-import           Control.Applicative ((<$>))
-import           Control.Monad.IO.Class (MonadIO, liftIO)
-import           Control.Monad.Logger (NoLoggingT)
-import           Control.Monad.Trans.Control (MonadBaseControl)
+import           Control.Applicative                   ((<$>))
+import           Control.Monad.IO.Class                (MonadIO, liftIO)
+import           Control.Monad.Logger                  (NoLoggingT)
+import           Control.Monad.Trans.Control           (MonadBaseControl)
 import           Control.Monad.Trans.Resource.Internal (ResourceT)
-import qualified Database.Persist as P
-import qualified Database.Persist.Sqlite as P
-import           Database.Persist.TH
-import qualified Data.Aeson as A
-import           Data.Foldable (foldl')
-import qualified Data.Map.Strict as M
-import           Data.Maybe (fromJust)
+import qualified Data.Aeson                            as A
+import           Data.Foldable                         (foldl')
+import qualified Data.Map.Strict                       as M
+import           Data.Maybe                            (fromJust)
+import           Data.Text                             (Text)
 import qualified Data.Text
-import           Data.Text (Text)
+import qualified Database.Persist                      as P
+import qualified Database.Persist.Sqlite               as P
+import           Database.Persist.TH
 import           GHC.Generics
+import           GHC.Int                               (Int64)
 
-import DB.Type
+import           DB.Type
 
 dbname = "db.sqlite"
 
@@ -53,24 +51,12 @@ Kyokumen
   kifuId KifuId
   orderId Int
   ban Ban
+  fugou Fugou Maybe
   mochiGoma1 [Koma]
   mochiGoma2 [Koma]
-  KyokumenOrder kifuId orderId
-  deriving Show Generic
-Fugou
-  kifuId KifuId
-  orderId Int
-  player Player
-  to Pos
-  from Pos Maybe
-  koma Koma
-  nari Bool
-  FugouOrder kifuId orderId
+  preId KyokumenId Maybe
   deriving Show Generic
 |]
-
-instance A.FromJSON Fugou
-instance A.ToJSON Fugou
 
 instance A.FromJSON Kifu
 instance A.ToJSON Kifu
@@ -79,21 +65,24 @@ instance A.FromJSON Kyokumen
 instance A.ToJSON Kyokumen
 
 
-{-| insertFugou
-insert Fugou and Kyokumen, and update Kifu.
+{-| insertKyokumen
+insert Kyokumen, and update Kifu.
 -}
-insertFugou :: MonadIO m => Fugou -> m (Maybe Fugou)
-insertFugou f = runDB $ do
+insertKyokumen :: MonadIO m => Fugou -> m KyokumenId
+insertKyokumen f = runDB $ do
   let
-    kifuId = fugouKifuId f
-    orderId = fugouOrderId f
-  kyokumen <- P.entityVal . fromJust <$> lastKyokumen kifuId orderId -- TODO: fromJustをちゃんとハンドリングする
-  fugouId <- P.insert f
-  fugou <- P.get fugouId
-  P.insert $ Kyokumen kifuId orderId (nextBan (kyokumenBan kyokumen) f) [] []
-  return fugou
-  where
-    lastKyokumen kid oid = P.getBy $ KyokumenOrder kid (oid - 1)
+    preId :: KyokumenId
+    preId = P.toSqlKey (preKyokumenId f)
+  kyokumen <- fromJust <$> P.get preId -- TODO: fromJustをちゃんとハンドリングする
+  P.insert $
+    Kyokumen
+      (P.toSqlKey (fugouKifuId f))
+      (fugouOrderId f)
+      (nextBan (kyokumenBan kyokumen) f)
+      (Just f)
+      []
+      []
+      (Just preId)
 
 
 {-| insertKifu
@@ -105,24 +94,17 @@ insertKifu k = runDB $ do
   P.insert $ initKyokumen kifuId
   return kifuId
 
-
-
-getFugou fid = runDB $ P.get (P.toSqlKey fid :: FugouId)
-
+getKifu :: MonadIO m => Int64 -> m (Maybe Kifu)
 getKifu kid = runDB $ P.get (P.toSqlKey kid :: KifuId)
 
-
-
--- runDB :: MonadIO m => P.SqlPersistT (Control.Monad.Logger.NoLoggingT (Control.Monad.Trans.Resource.Internal.ResourceT IO)) a -> m a
 runDB :: MonadIO m => P.SqlPersistT (NoLoggingT (ResourceT IO)) a -> m a
 runDB query = liftIO $ P.runSqlite dbname $ do
   P.runMigration migrateAll
   query
 
 initKyokumen :: KifuId -> Kyokumen
-initKyokumen kifuId = Kyokumen kifuId 0 initBan [] []
+initKyokumen kifuId = Kyokumen kifuId 0 initBan Nothing [] [] Nothing
 
--- TODO あとでちゃんとする
 initBan :: Ban
 initBan = Ban $ foldl' (\b (masu, pos) -> M.adjust (const masu) pos b) (ban emptyBan)
           [ (Just (Masu Ky P2), posToKey $ Pos 1 1)
@@ -163,16 +145,3 @@ nextBan b f = Ban $ M.update (\masu -> Just (Just (Masu Ky P2))) (posToKey (Pos 
 
 posToKey :: Pos -> String
 posToKey (Pos x y) = show x ++ show y
-
-
-selectFugous :: (MonadBaseControl IO m, MonadIO m) => m [P.Entity Fugou]
-selectFugous = P.runSqlite dbname $
-  P.selectList ([] :: [P.Filter Fugou]) []
-
--- get :: (P.PersistEntity val, MonadIO m, P.PersistEntityBackend val ~ P.SqlBackend)
---      => P.Key val -> m (Maybe val)
--- get = runDB . P.get
-
--- insert :: (P.PersistEntity val, MonadIO m, P.PersistEntityBackend val ~ P.SqlBackend)
---         => val -> m (P.Key val)
--- insert = runDB . P.insert
