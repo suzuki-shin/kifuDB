@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE DeriveGeneric        #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -9,6 +10,7 @@ module DB.Type
     , Result(..)
     , Ban(..)
     , Fugou(..)
+    , showKoma
       ) where
 
 import qualified Data.Aeson              as A
@@ -17,6 +19,7 @@ import qualified Data.Map.Strict         as M
 import           Database.Persist
 import           Database.Persist.Sqlite
 import           Database.Persist.TH
+import           Data.Text.Lazy                             (Text)
 import           GHC.Generics
 
 data Player = P1 | P2 deriving (Show, Read, Eq, Generic)
@@ -29,13 +32,31 @@ instance A.ToJSON Player
 data Koma = Fu | Ky | Ke | Gn | Kn | Hi | Kk | Ou
           | To | NKy | NKe | NGn | Ry | Um
           deriving (Show, Read, Eq, Generic)
+
 derivePersistField "Koma"
+
+showKoma :: Koma -> Text
+showKoma Fu = "　歩"
+showKoma Ky = "　香"
+showKoma Ke = "　桂"
+showKoma Gn = "　銀"
+showKoma Kn = "　金"
+showKoma Hi = "　飛"
+showKoma Kk = "　角"
+showKoma Ou = "　玉"
+showKoma To = "　と"
+showKoma NKy = "成香"
+showKoma NKe = "成桂"
+showKoma NGn = "成銀"
+showKoma Ry = "　龍"
+showKoma Um = "　馬"
+
 
 instance A.FromJSON Koma
 instance A.ToJSON Koma
 
 
-data Pos = Pos { x :: Int, y :: Int } deriving (Show, Read, Eq, Ord, Generic)
+data Pos = Pos { posX :: Int, posY :: Int } deriving (Show, Read, Eq, Ord, Generic)
 derivePersistField "Pos"
 
 instance A.FromJSON Pos

@@ -13,12 +13,15 @@
 module DB
     ( Fugou(..)
     , Kifu(..)
+    , Kyokumen(..)
     , KifuId
     , getKifu
+    , getKyokumen
     , insertKifu
     , insertKyokumen
     , P.toSqlKey
     , P.entityVal
+    , drawBan
     ) where
 
 import           Control.Applicative                   ((<$>))
@@ -30,8 +33,10 @@ import qualified Data.Aeson                            as A
 import           Data.Foldable                         (foldl')
 import qualified Data.Map.Strict                       as M
 import           Data.Maybe                            (fromJust)
-import           Data.Text                             (Text)
-import qualified Data.Text
+-- import           Data.Text                             (Text)
+-- import qualified Data.Text
+import qualified Data.Text.Lazy
+import Data.Text.Lazy (Text, append)
 import qualified Database.Persist                      as P
 import qualified Database.Persist.Sqlite               as P
 import           Database.Persist.TH
@@ -97,6 +102,10 @@ insertKifu k = runDB $ do
 getKifu :: MonadIO m => Int64 -> m (Maybe Kifu)
 getKifu kid = runDB $ P.get (P.toSqlKey kid :: KifuId)
 
+-- getKyokumen :: MonadIO m => Int64 -> m (Maybe Kyokumen)
+getKyokumen kid = runDB $ P.get (P.toSqlKey kid :: KyokumenId)
+
+
 runDB :: MonadIO m => P.SqlPersistT (NoLoggingT (ResourceT IO)) a -> m a
 runDB query = liftIO $ P.runSqlite dbname $ do
   P.runMigration migrateAll
@@ -118,7 +127,25 @@ initBan = Ban $ foldl' (\b (masu, pos) -> M.adjust (const masu) pos b) (ban empt
           , (Just (Masu Ky P2), posToKey $ Pos 9 1)
           , (Just (Masu Kk P2), posToKey $ Pos 2 2)
           , (Just (Masu Hi P2), posToKey $ Pos 8 2)
-          , (Just (Masu Hi P2), posToKey $ Pos 2 2)
+          , (Just (Masu Fu P2), posToKey $ Pos 1 3)
+          , (Just (Masu Fu P2), posToKey $ Pos 2 3)
+          , (Just (Masu Fu P2), posToKey $ Pos 3 3)
+          , (Just (Masu Fu P2), posToKey $ Pos 4 3)
+          , (Just (Masu Fu P2), posToKey $ Pos 5 3)
+          , (Just (Masu Fu P2), posToKey $ Pos 6 3)
+          , (Just (Masu Fu P2), posToKey $ Pos 7 3)
+          , (Just (Masu Fu P2), posToKey $ Pos 8 3)
+          , (Just (Masu Fu P2), posToKey $ Pos 9 3)
+          , (Just (Masu Fu P1), posToKey $ Pos 1 7)
+          , (Just (Masu Fu P1), posToKey $ Pos 2 7)
+          , (Just (Masu Fu P1), posToKey $ Pos 3 7)
+          , (Just (Masu Fu P1), posToKey $ Pos 4 7)
+          , (Just (Masu Fu P1), posToKey $ Pos 5 7)
+          , (Just (Masu Fu P1), posToKey $ Pos 6 7)
+          , (Just (Masu Fu P1), posToKey $ Pos 7 7)
+          , (Just (Masu Fu P1), posToKey $ Pos 8 7)
+          , (Just (Masu Fu P1), posToKey $ Pos 9 7)
+          , (Just (Masu Hi P1), posToKey $ Pos 2 8)
           , (Just (Masu Kk P1), posToKey $ Pos 8 8)
           , (Just (Masu Ky P1), posToKey $ Pos 1 9)
           , (Just (Masu Ke P1), posToKey $ Pos 2 9)
@@ -141,7 +168,35 @@ possOnBan = [Pos x y | x <- [1..9], y <- [1..9]]
 
 -- TODO あとでちゃんとする
 nextBan :: Ban -> Fugou -> Ban
-nextBan b f = Ban $ M.update (\masu -> Just (Just (Masu Ky P2))) (posToKey (Pos 1 2)) (ban b)
+nextBan b f = changeTo (changeFrom b f) f
+  where
+--     changeTo :: M.Map String (Maybe Masu) -> Fugou -> M.Map String (Maybe Masu)
+    changeTo b f = Ban $ M.update (\masu -> Just (Just (Masu (fugouKoma f) (fugouPlayer f)))) (posToKey (fugouTo f)) (ban b)
+
+--     changeFrom :: M.Map String (Maybe Masu) -> Fugou -> M.Map String (Maybe Masu)
+    changeFrom b f = case fugouFrom f of
+      Nothing -> b
+      Just pos -> Ban $ M.update (const Nothing) (posToKey pos) (ban b)
 
 posToKey :: Pos -> String
 posToKey (Pos x y) = show x ++ show y
+
+posFromKey :: String -> Pos
+posFromKey key = Pos (posInt `div` 10) (posInt `mod` 10)
+  where
+    posInt :: Int
+    posInt = read key
+
+drawBan :: Ban -> Text
+drawBan (Ban b) =
+  Data.Text.Lazy.concat $ map ((`append` "\n") . col) [1..9]
+  where
+    banList :: [((Int, Int), Text)]
+    banList = map (\(k, mMas) -> ((posX $ posFromKey k, posY $ posFromKey k), mMasuToText mMas)) $ M.toList b
+
+    mMasuToText :: Maybe Masu -> Text
+    mMasuToText (Just (Masu koma player)) = append (showKoma koma) (if player == P1 then "^" else "v")
+    mMasuToText Nothing = "　 "
+
+    col :: Int -> Text
+    col y = Data.Text.Lazy.concat $ map snd $ filter (\((_, y'), _) -> y' == y) banList

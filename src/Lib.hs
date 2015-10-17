@@ -12,7 +12,7 @@ import           Control.Applicative                  ((<$>))
 import           Control.Monad.IO.Class               (liftIO)
 import qualified Network.Wai.Middleware.RequestLogger as L
 import qualified Web.Scotty                           as S
-
+import           Data.Maybe (fromJust)
 import qualified DB
 
 someFunc :: IO ()
@@ -37,5 +37,21 @@ someFunc = S.scotty 3000 $ do
     x <- DB.insertKifu k
     liftIO $ print x
 
+  S.get "/ban/:id" $ do
+    kyokumenId <- S.param "id"
+    liftIO $ print "xxx/ban1"
+    liftIO $ print kyokumenId
+    liftIO $ print "xxx/ban2"
+    mKyokumen <- DB.getKyokumen kyokumenId
+    liftIO $ print mKyokumen
+    case mKyokumen of
+      Just kyokumen ->
+--         liftIO $ print kyokumen
+        S.text $ DB.drawBan (DB.kyokumenBan kyokumen)
+--         S.json $ DB.drawBan (DB.kyokumenBan kyokumen)
+--       Nothing -> S.json ("hoge" :: String)
+
   S.notFound $
     S.text "there is no such route."
+
+
