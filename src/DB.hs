@@ -33,10 +33,8 @@ import qualified Data.Aeson                            as A
 import           Data.Foldable                         (foldl')
 import qualified Data.Map.Strict                       as M
 import           Data.Maybe                            (fromJust)
--- import           Data.Text                             (Text)
--- import qualified Data.Text
+import           Data.Text.Lazy                        (Text, append)
 import qualified Data.Text.Lazy
-import Data.Text.Lazy (Text, append)
 import qualified Database.Persist                      as P
 import qualified Database.Persist.Sqlite               as P
 import           Database.Persist.TH
@@ -102,7 +100,7 @@ insertKifu k = runDB $ do
 getKifu :: MonadIO m => Int64 -> m (Maybe Kifu)
 getKifu kid = runDB $ P.get (P.toSqlKey kid :: KifuId)
 
--- getKyokumen :: MonadIO m => Int64 -> m (Maybe Kyokumen)
+getKyokumen :: MonadIO m => Int64 -> m (Maybe Kyokumen)
 getKyokumen kid = runDB $ P.get (P.toSqlKey kid :: KyokumenId)
 
 
@@ -166,17 +164,17 @@ emptyBan = Ban $ M.fromList $ zip (map posToKey possOnBan) (repeat Nothing)
 possOnBan :: [Pos]
 possOnBan = [Pos x y | x <- [1..9], y <- [1..9]]
 
--- TODO あとでちゃんとする
+
 nextBan :: Ban -> Fugou -> Ban
 nextBan b f = changeTo (changeFrom b f) f
   where
---     changeTo :: M.Map String (Maybe Masu) -> Fugou -> M.Map String (Maybe Masu)
+    changeTo :: Ban -> Fugou -> Ban
     changeTo b f = Ban $ M.update (\masu -> Just (Just (Masu (fugouKoma f) (fugouPlayer f)))) (posToKey (fugouTo f)) (ban b)
 
---     changeFrom :: M.Map String (Maybe Masu) -> Fugou -> M.Map String (Maybe Masu)
+    changeFrom :: Ban -> Fugou -> Ban
     changeFrom b f = case fugouFrom f of
       Nothing -> b
-      Just pos -> Ban $ M.update (const Nothing) (posToKey pos) (ban b)
+      Just pos -> Ban $ M.update (const (Just Nothing)) (posToKey pos) (ban b)
 
 posToKey :: Pos -> String
 posToKey (Pos x y) = show x ++ show y
@@ -189,14 +187,18 @@ posFromKey key = Pos (posInt `div` 10) (posInt `mod` 10)
 
 drawBan :: Ban -> Text
 drawBan (Ban b) =
-  Data.Text.Lazy.concat $ map ((`append` "\n") . col) [1..9]
+  Data.Text.Lazy.concat [
+      "<html><body><table>"
+    , Data.Text.Lazy.concat $ map ((\t -> Data.Text.Lazy.concat ["<tr>", t, "</tr>"]) . col) [1..9]
+    , "</table></body></html>"
+    ]
   where
     banList :: [((Int, Int), Text)]
     banList = map (\(k, mMas) -> ((posX $ posFromKey k, posY $ posFromKey k), mMasuToText mMas)) $ M.toList b
 
     mMasuToText :: Maybe Masu -> Text
-    mMasuToText (Just (Masu koma player)) = append (showKoma koma) (if player == P1 then "^" else "v")
-    mMasuToText Nothing = "　 "
+    mMasuToText (Just (Masu koma player)) = Data.Text.Lazy.concat["<td>", showKoma koma, if player == P1 then "^" else "v", "</td>"]
+    mMasuToText Nothing = "<td>　 </td>"
 
     col :: Int -> Text
-    col y = Data.Text.Lazy.concat $ map snd $ filter (\((_, y'), _) -> y' == y) banList
+    col y = Data.Text.Lazy.concat $ reverse $ map snd $ filter (\((_, y'), _) -> y' == y) banList

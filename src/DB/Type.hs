@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE DeriveGeneric        #-}
+{-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 module DB.Type
@@ -16,10 +16,10 @@ module DB.Type
 import qualified Data.Aeson              as A
 import           Data.Int                (Int64)
 import qualified Data.Map.Strict         as M
+import           Data.Text.Lazy          (Text)
 import           Database.Persist
 import           Database.Persist.Sqlite
 import           Database.Persist.TH
-import           Data.Text.Lazy                             (Text)
 import           GHC.Generics
 
 data Player = P1 | P2 deriving (Show, Read, Eq, Generic)
