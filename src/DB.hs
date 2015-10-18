@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE EmptyDataDecls             #-}
 {-# LANGUAGE FlexibleContexts           #-}
+{-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
@@ -38,7 +39,6 @@ import qualified Data.Text.Lazy
 import qualified Database.Persist                      as P
 import qualified Database.Persist.Sqlite               as P
 import           Database.Persist.TH
-import           GHC.Generics
 import           GHC.Int                               (Int64)
 
 import           DB.Type
@@ -46,11 +46,11 @@ import           DB.Type
 dbname = "db.sqlite"
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
-Kifu
+Kifu json
   result Result Maybe
   info Text
-  deriving Show Generic
-Kyokumen
+  deriving Show
+Kyokumen json
   kifuId KifuId
   orderId Int
   ban Ban
@@ -58,14 +58,8 @@ Kyokumen
   mochiGoma1 [Koma]
   mochiGoma2 [Koma]
   preId KyokumenId Maybe
-  deriving Show Generic
+  deriving Show
 |]
-
-instance A.FromJSON Kifu
-instance A.ToJSON Kifu
-
-instance A.FromJSON Kyokumen
-instance A.ToJSON Kyokumen
 
 
 {-| insertKyokumen
