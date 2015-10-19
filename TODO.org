@@ -1,4 +1,9 @@
-- [ ] APIかんがえる
- - [ ] post /fugou/:kifuId
- - [ ] get /kifu/:id/:orderId
-
+- [X] APIかんがえる
+  - [X] post /fugou/
+    - curl -v -H "Accept: application/json" -H "Content-type: application/json" -X POST -d '{"fugouNari":false,"fugouPlayer":"P1","fugouFrom":{"x":7,"y":7},"fugouKifuId":1,"fugouTo":{"x":7,"y":6},"fugouKoma":"Fu"}'  http://localhost:3000/fugou
+    - fugou を insert
+    - kyokumen を insert
+    - kifu を updatge
+  - [X] get /kifu/:id/:orderId
+- [X] nextKyokumen :: Kyokumen -> Fugou -> Kyokumen
+- [X] persistentのトランザクションについて調べる
