@@ -11,7 +11,7 @@ module KifuDB
 import           Control.Applicative                  ((<$>))
 import           Control.Monad.IO.Class               (liftIO)
 import           Data.Maybe                           (fromJust)
-import qualified KifuDB.Model as Model
+import qualified KifuDB.Model                         as Model
 import qualified Network.Wai.Middleware.RequestLogger as L
 import qualified Web.Scotty                           as S
 
