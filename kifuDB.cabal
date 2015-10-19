@@ -15,9 +15,9 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
-                     , DB
-                     , DB.Type
+  exposed-modules:     KifuDB
+                     , KifuDB.Model
+                     , KifuDB.Model.Type
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , bytestring

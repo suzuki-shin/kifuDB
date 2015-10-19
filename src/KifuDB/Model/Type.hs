@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-module DB.Type
+module KifuDB.Model.Type
     ( Player(..)
     , Koma(..)
     , Masu(..)

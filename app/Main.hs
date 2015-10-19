@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import qualified KifuDB
 
 main :: IO ()
-main = someFunc
+main = KifuDB.run

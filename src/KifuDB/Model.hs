@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE TypeSynonymInstances       #-}
 
-module DB
+module KifuDB.Model
     ( Fugou(..)
     , Kifu(..)
     , Kyokumen(..)
@@ -41,7 +41,7 @@ import qualified Database.Persist.Sqlite               as P
 import           Database.Persist.TH
 import           GHC.Int                               (Int64)
 
-import           DB.Type
+import           KifuDB.Model.Type
 
 dbname = "db.sqlite"
 
