@@ -11,8 +11,7 @@ module KifuDB.Model.Type
     , Ban(..)
     , Fugou(..)
     , showKoma
-    , posToKey
-    , posFromKey
+    , getAt
     , initBan
     , emptyBan
     , nextBan
@@ -112,6 +111,8 @@ posFromKey key = Pos (posInt `div` 10) (posInt `mod` 10)
     posInt :: Int
     posInt = read key
 
+getAt :: Pos -> Ban -> Maybe (Maybe Masu)
+getAt p b = M.lookup (posToKey p) $ ban b
 
 initBan :: Ban
 initBan = Ban $ foldl' (\b (masu, pos) -> M.adjust (const masu) pos b) (ban emptyBan)
