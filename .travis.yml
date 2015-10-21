@@ -19,7 +19,7 @@ addons:
 script:
   - stack --no-terminal --skip-ghc-check install hlint
   - stack --no-terminal --skip-ghc-check build
-  - stack --no-terminal --skip-ghc-check test
+  - stack --no-terminal test
   - hlint src
 
 cache:
