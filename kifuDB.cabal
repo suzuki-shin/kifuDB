@@ -2,11 +2,11 @@ name:                kifuDB
 version:             0.1.0.0
 synopsis:            Initial project template from stack
 description:         Please see README.md
-homepage:            http://github.com/githubuser/kifuDB#readme
+homepage:            http://github.com/suzuki-shin/kifuDB#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
+author:              Shinichiro SUZUKI
+maintainer:          shinichiro.su@gmail.com
 copyright:           2010 Author Here
 category:            Web
 build-type:          Simple
@@ -18,6 +18,7 @@ library
   exposed-modules:     KifuDB
                      , KifuDB.Model
                      , KifuDB.Model.Type
+                     , KifuDB.Model.Type.Internal
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , bytestring

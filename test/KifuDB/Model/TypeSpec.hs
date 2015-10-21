@@ -2,7 +2,7 @@
 module KifuDB.Model.TypeSpec where
 
 import Test.Hspec
-import KifuDB.Model.Type
+import KifuDB.Model.Type.Internal
 
 spec :: Spec
 spec = do
@@ -22,7 +22,5 @@ spec = do
         getAt (Pos 2 1) initBan `shouldBe` Just (Just (Masu {masuKoma = Ke, masuPlayer = P2}))
       it "getAt (Pos 1 2) initBan" $
         getAt (Pos 1 2) initBan `shouldBe` Just Nothing
---       it "posToKey" $
---         posToKey (Pos 1 2) `shouldBe` "12"
---         it "emptyBan two paddings" $
---             emptyBan "cGFkZGluZyAgMg==" `shouldBe` "padding  2"
+      it "posToKey (Pos 1 2) is 12" $
+        posToKey (Pos 1 2) `shouldBe` "12"
