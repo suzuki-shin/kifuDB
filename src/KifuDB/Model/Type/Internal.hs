@@ -22,7 +22,7 @@ instance A.ToJSON Player
 
 data Koma = Fu | Ky | Ke | Gn | Kn | Hi | Kk | Ou
           | To | NKy | NKe | NGn | Ry | Um
-          deriving (Show, Read, Eq, Generic)
+          deriving (Show, Read, Eq, Ord, Generic)
 
 derivePersistField "Koma"
 

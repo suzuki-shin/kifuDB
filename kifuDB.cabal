@@ -19,13 +19,16 @@ library
                      , KifuDB.Model
                      , KifuDB.Model.Type
                      , KifuDB.Model.Type.Internal
+                     , KifuDB.Parser
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , bytestring
                      , containers
                      , http-types
+                     , iconv
                      , monad-logger
                      , monad-control
+                     , parsec
                      , persistent
                      , persistent-sqlite
                      , persistent-template
@@ -34,6 +37,7 @@ library
                      , text
                      , time
                      , transformers
+                     , utf8-string
                      , wai
                      , wai-extra
                      , wai-middleware-static
