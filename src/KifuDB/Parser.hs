@@ -3,17 +3,19 @@ module KifuDB.Parser (
   parseKifu
   ) where
 
-import Text.Parsec
-import qualified Text.ParserCombinators.Parsec.Token as P
-import Text.ParserCombinators.Parsec.Language
-import Text.Parsec.String
-import Data.List
-import Control.Applicative ((<*>), (<$>))
-import Data.Char (digitToInt)
-import KifuDB.Model.Type
-import qualified Data.ByteString.Lazy.Char8 as BL8 (writeFile, unpack, pack, readFile)
-import Codec.Binary.UTF8.String (decodeString)
-import Codec.Text.IConv (convert)
+import           Codec.Binary.UTF8.String               (decodeString)
+import           Codec.Text.IConv                       (convert)
+import           Control.Applicative                    ((<$>), (<*>))
+import qualified Data.ByteString.Lazy.Char8             as BL8 (pack, readFile,
+                                                                unpack,
+                                                                writeFile)
+import           Data.Char                              (digitToInt)
+import           Data.List
+import           KifuDB.Model.Type
+import           Text.Parsec
+import           Text.Parsec.String
+import           Text.ParserCombinators.Parsec.Language
+import qualified Text.ParserCombinators.Parsec.Token    as P
 
 lexer  = P.makeTokenParser emptyDef
 parens = P.parens lexer
@@ -24,12 +26,12 @@ type Body = [KifuLine]
 data Position = Position {col :: Int, row ::  Int} | Dou | Uchi deriving (Eq, Show)
 
 data KifuLine = KifuLine {
-    kifuLineTekazu :: Int
-  , kifuLineKoma :: String
+    kifuLineTekazu  :: Int
+  , kifuLineKoma    :: String
 --   , kifuLineKoma :: Koma
-  , kifuLineToPos :: Position
+  , kifuLineToPos   :: Position
   , kifuLineFromPos :: Position
-  , kifuLineNari :: String
+  , kifuLineNari    :: String
   } | Tohryo deriving (Eq)
 
 instance Show KifuLine where
@@ -38,7 +40,7 @@ instance Show KifuLine where
 
 data Kifu = Kifu {
     kifuHeader :: Header
-  , kifuBody :: Body
+  , kifuBody   :: Body
   } deriving (Show, Eq)
 
 parseKifu s =
